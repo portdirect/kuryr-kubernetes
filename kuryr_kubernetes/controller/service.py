@@ -63,6 +63,9 @@ class KuryrK8sService(service.Service):
                 LOG.debug("present: %s",
                           event['object']['metadata']['selfLink'])
 
+        class DummyNamespaceHandler(DummyHandler):
+            OBJECT_KIND = constants.K8S_OBJ_NAMESPACE
+
         class DummyPodHandler(DummyHandler):
             OBJECT_KIND = constants.K8S_OBJ_POD
 
@@ -75,8 +78,9 @@ class KuryrK8sService(service.Service):
         pipeline = h_pipeline.ControllerPipeline(self.tg)
         self.watcher = watcher.Watcher(pipeline, self.tg)
         # TODO(ivc): pluggable resource/handler registration
-        for resource in ["pods", "services", "endpoints"]:
+        for resource in ["namespaces", "pods", "services", "endpoints"]:
             self.watcher.add("%s/%s" % (constants.K8S_API_BASE, resource))
+        pipeline.register(DummyNamespaceHandler())
         pipeline.register(DummyPodHandler())
         pipeline.register(DummyServiceHandler())
         pipeline.register(DummyEndpointsHandler())
